@@ -1,0 +1,310 @@
+import React, { useState } from 'react';
+
+const exchangeRates = {
+  INR: 1,
+  USD: 0.012,
+  EUR: 0.011,
+  GBP: 0.0095,
+  JPY: 1.65,
+  AUD: 0.018,
+  CAD: 0.016,
+  NZD: 0.019,
+  CHF: 0.011,
+  CNY: 0.084,
+  SGD: 0.016,
+  HKD: 0.094,
+  SEK: 0.12,
+  NOK: 0.13,
+  ZAR: 0.22,
+  RUB: 1.1,
+  BRL: 0.061,
+  MXN: 0.2,
+  KRW: 16.0,
+};
+
+const LoanCalculator = () => {
+  const [principal, setPrincipal] = useState('');
+  const [rate, setRate] = useState('');
+  const [tenure, setTenure] = useState('');
+  const [emi, setEmi] = useState(null);
+  const [currency, setCurrency] = useState('INR');
+  const [darkMode, setDarkMode] = useState(false);
+  const [emiDetails, setEmiDetails] = useState([]);
+  const [showReset, setShowReset] = useState(false);
+
+  const isValidNumber = (value) => /^\d*\.?\d*$/.test(value);
+
+  const handleInput = (setter) => (e) => {
+    const { value } = e.target;
+    if (isValidNumber(value)) {
+      setter(value);
+    } else {
+      alert('Only numeric values are allowed.');
+    }
+  };
+
+  const calculateEMI = () => {
+    const P = parseFloat(principal);
+    const R = parseFloat(rate) / 12 / 100;
+    const N = parseFloat(tenure) * 12;
+
+    if (!P || !R || !N) {
+      alert('Please enter all input values correctly');
+      return;
+    }
+
+    const emi = (P * R * Math.pow(1 + R, N)) / (Math.pow(1 + R, N) - 1);
+    setEmi(emi.toFixed(2));
+
+    const details = [];
+    let remainingBalance = P;
+
+    for (let month = 1; month <= N; month++) {
+      const interest = remainingBalance * R;
+      const principalPaid = emi - interest;
+      remainingBalance -= principalPaid;
+
+      details.push({
+        month,
+        principalPaid: (principalPaid * exchangeRates[currency]).toFixed(2),
+        interest: (interest * exchangeRates[currency]).toFixed(2),
+        remainingBalance: (remainingBalance * exchangeRates[currency]).toFixed(2),
+      });
+    }
+
+    setEmiDetails(details);
+    setShowReset(true);
+  };
+
+  const reset = () => {
+    setPrincipal('');
+    setRate('');
+    setTenure('');
+    setEmi(null);
+    setEmiDetails([]);
+    setShowReset(false);
+  };
+
+  const toggleMode = () => setDarkMode(!darkMode);
+
+  const styles = {
+    container: {
+      fontFamily: 'Roboto, sans-serif',
+      backgroundColor: darkMode ? '#121212' : '#f4f6f8',
+      color: darkMode ? '#e0e0e0' : '#212121',
+      minHeight: '100vh',
+      padding: '30px',
+    },
+    navbar: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      backgroundColor: darkMode ? '#1f1f1f' : '#1976d2',
+      color: '#fff',
+      padding: '16px 24px',
+      borderRadius: '8px',
+      marginBottom: '24px',
+      boxShadow: darkMode ? '0 2px 10px #000' : '0 2px 6px rgba(0,0,0,0.2)',
+    },
+    title: {
+      fontSize: '24px',
+      fontWeight: '600',
+    },
+    toggleSwitch: {
+      width: '50px',
+      height: '26px',
+      borderRadius: '50px',
+      backgroundColor: darkMode ? '#90caf9' : '#ccc',
+      display: 'flex',
+      justifyContent: darkMode ? 'flex-end' : 'flex-start',
+      cursor: 'pointer',
+      transition: 'all 0.3s',
+    },
+    toggleCircle: {
+      width: '20px',
+      height: '20px',
+      borderRadius: '50%',
+      backgroundColor: '#fff',
+      margin: '3px',
+      transition: 'all 0.3s',
+    },
+    inputGroup: {
+      display: 'flex',
+      flexWrap: 'wrap',
+      gap: '16px',
+      marginBottom: '24px',
+    },
+    input: {
+      flex: '1 1 200px',
+      padding: '14px',
+      fontSize: '16px',
+      border: '1px solid #ccc',
+      borderRadius: '6px',
+      backgroundColor: darkMode ? '#2e2e2e' : '#fff',
+      color: darkMode ? '#fff' : '#000',
+      boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+    },
+    select: {
+      padding: '14px',
+      fontSize: '16px',
+      borderRadius: '6px',
+      border: '1px solid #ccc',
+      backgroundColor: darkMode ? '#2e2e2e' : '#fff',
+      color: darkMode ? '#fff' : '#000',
+      boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+    },
+    button: {
+      padding: '14px 26px',
+      fontSize: '16px',
+      borderRadius: '6px',
+      backgroundColor: darkMode ? '#64b5f6' : '#1976d2',
+      color: '#fff',
+      border: 'none',
+      cursor: 'pointer',
+      marginRight: '12px',
+      fontWeight: 'bold',
+      transition: 'background 0.3s',
+    },
+    resetBtn: {
+      backgroundColor: darkMode ? '#000' : '#fff',
+      color: '#ba68c8',
+      border: '2px solid #ba68c8',
+    },
+    tableContainer: {
+      marginTop: '30px',
+      overflowX: 'auto',
+    },
+    table: {
+      width: '100%',
+      borderCollapse: 'collapse',
+      boxShadow: darkMode ? '0 2px 10px #000' : '0 2px 6px rgba(0,0,0,0.1)',
+    },
+    th: {
+      backgroundColor: darkMode ? '#424242' : '#e0e0e0',
+      color: darkMode ? '#fff' : '#000',
+      padding: '14px',
+      borderBottom: '1px solid #ccc',
+      textAlign: 'center',
+    },
+    td: {
+      padding: '14px',
+      borderBottom: '1px solid #ccc',
+      textAlign: 'center',
+    },
+    oddRow: {
+      backgroundColor: darkMode ? '#2c2c2c' : '#f9f9f9',
+    },
+    emiCard: {
+      backgroundColor: darkMode ? '#1e1e1e' : '#e3f2fd',
+      border: `2px solid ${darkMode ? '#64b5f6' : '#1976d2'}`,
+      borderRadius: '10px',
+      padding: '20px',
+      marginBottom: '20px',
+      textAlign: 'center',
+      color: darkMode ? '#90caf9' : '#0d47a1',
+      fontSize: '20px',
+      fontWeight: 'bold',
+      boxShadow: darkMode ? '0 2px 8px #000' : '0 2px 8px rgba(0,0,0,0.1)',
+    },
+  };
+
+  return (
+    <div style={styles.container}>
+      <div style={styles.navbar}>
+        <div style={styles.title}>Loan Calculator</div>
+        <div onClick={toggleMode} style={styles.toggleSwitch}>
+          <div style={styles.toggleCircle}></div>
+        </div>
+      </div>
+
+      <div style={styles.inputGroup}>
+        <input
+          type="text"
+          placeholder="Loan Amount"
+          value={principal}
+          onChange={handleInput(setPrincipal)}
+          style={styles.input}
+        />
+        <input
+          type="text"
+          placeholder="Interest Rate (%)"
+          value={rate}
+          onChange={handleInput(setRate)}
+          style={styles.input}
+        />
+        <input
+          type="text"
+          placeholder="Term (Years)"
+          value={tenure}
+          onChange={handleInput(setTenure)}
+          style={styles.input}
+        />
+        <select
+          value={currency}
+          onChange={(e) => setCurrency(e.target.value)}
+          style={styles.select}
+        >
+          {Object.keys(exchangeRates).map((cur) => (
+            <option key={cur} value={cur}>
+              {cur}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div style={{ marginBottom: '20px' }}>
+        <button onClick={calculateEMI} style={styles.button}>
+          Calculate
+        </button>
+        {showReset && (
+          <button
+            onClick={reset}
+            style={{ ...styles.button, ...styles.resetBtn }}
+            onMouseOver={(e) =>
+              (e.currentTarget.style.backgroundColor = darkMode ? '#1a1a1a' : '#f3e5f5')
+            }
+            onMouseOut={(e) =>
+              (e.currentTarget.style.backgroundColor = darkMode ? '#000' : '#fff')
+            }
+          >
+            Reset Table
+          </button>
+        )}
+      </div>
+
+      {emi && (
+        <div style={styles.emiCard}>
+          Monthly EMI: {currency} {(emi * exchangeRates[currency]).toFixed(2)}
+        </div>
+      )}
+
+      {emiDetails.length > 0 && (
+        <div style={styles.tableContainer}>
+          <h4>Amortization Schedule ({currency})</h4>
+          <table style={styles.table}>
+            <thead>
+              <tr>
+                <th style={styles.th}>Month</th>
+                <th style={styles.th}>Principal</th>
+                <th style={styles.th}>Interest</th>
+                <th style={styles.th}>Remaining Balance</th>
+              </tr>
+            </thead>
+            <tbody>
+              {emiDetails.map((row, index) => (
+                <tr key={row.month} style={index % 2 === 0 ? {} : styles.oddRow}>
+                  <td style={styles.td}>{row.month}</td>
+                  <td style={styles.td}>{row.principalPaid} {currency}</td>
+                  <td style={styles.td}>{row.interest} {currency}</td>
+                  <td style={styles.td}>{row.remainingBalance} {currency}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default LoanCalculator;
